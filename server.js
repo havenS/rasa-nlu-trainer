@@ -13,6 +13,14 @@ const open = require('open')
 const updateNotifier = require('update-notifier')
 const pkg = require('./package.json')
 
+let localConf = {}
+
+try {
+  localConf = require(path.join(process.cwd(),'trainer_conf.json'))
+}catch(e){
+  console.log('no local configuration file found or you’re not running rasa trainer in you rasa installation folder')
+}
+
 updateNotifier({
   pkg,
   updateCheckInterval: 1000 * 60 * 60 * 24 // one day
@@ -50,7 +58,7 @@ const sourceFile = {
   isLoaded: false,
 }
 
-function readData(path) {
+function readData(path, isSourceReading = true) {
   return new Promise((resolve, reject) => {
     fs.readFile(path, 'utf8', (error, raw) => {
       let json
@@ -66,7 +74,7 @@ function readData(path) {
         return reject(`Can't parse json file "${path}"\n${error}`)
       }
 
-      if (!json.rasa_nlu_data) {
+      if (isSourceReading && !json.rasa_nlu_data) {
         return reject('"rasa_nlu_data" is undefined')
       }
 
@@ -75,11 +83,13 @@ function readData(path) {
   })
 }
 
-if (argv.source) {
-  readData(argv.source)
+let source = (localConf && localConf.source) ? localConf.source : argv.source
+
+if (source) {
+  readData(source)
     .then(data => {
       sourceFile.data = data,
-      sourceFile.path = argv.source
+      sourceFile.path = source
       sourceFile.isLoaded = true
       serve()
     })
@@ -95,7 +105,7 @@ else {
   function checkDone() {
     if (isSearchingOver && inReading === 0) {
       if (!sourceFile.isLoaded) {
-        throw new Error(`Can't find training file, please try to specify it with the --source option`)
+        throw new Error(`Can't find training file, please try to specify it with the --source option or in a "trainer_conf.json" file`)
       }
       else {
         serve()
@@ -175,8 +185,32 @@ function serve() {
       readData(sourceFile.path)
         .then(json => sourceFile.data = json)
         .catch(error => console.error(error))
-        .then(() => res.json({ok: true}))
+        .then(() => {
+          if (localConf.pending_file) {
+            cleanPendings(data)
+              .then(() => res.json({ok: true}))
+              .catch(error => console.error(error))
+          } else {
+            res.json({ok: true})
+          }
+        })
     })
+  })
+
+  app.get('/get-pending', function(req, res){
+    if (!localConf || !localConf.pending_file) {
+      res.json({
+        data: {}
+      })
+    } else {
+      readData(localConf.pending_file, false)
+        .then(json => {
+          res.json({
+            data: json
+          })
+        })
+        .catch(error => console.error(error))
+    }
   })
 
   if (argv.port) {
@@ -196,5 +230,32 @@ function serve() {
     else {
       console.log('dev server listening at', port)
     }
+  }
+
+  function cleanPendings(newStrings) {
+    return new Promise(function(resolve, reject) {
+      readData(localConf.pending_file, false)
+        .then(json => {
+          const pendingStringCleaned = {}
+          Object.keys(json).forEach(function(key){
+            const string = json[key]
+            let stringExample = newStrings.rasa_nlu_data.common_examples.find(function(example){
+              return example.text === string
+            })
+            if (!stringExample) {
+              pendingStringCleaned[key] = string
+            }
+          })
+
+          fs.writeFile(localConf.pending_file, JSON.stringify(pendingStringCleaned), (error) => {
+            if (error) {
+              return reject(error)
+            }
+            
+            resolve()
+          })
+        })
+        .catch(error => console.error(error))
+    })
   }
 }

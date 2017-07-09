@@ -4,6 +4,7 @@ import React, { Component } from 'react'
 import ExampleTable from './ExampleTable'
 import TopBar from './TopBar'
 import AddExampleModal from './AddExampleModal'
+import ImportModal from './ImportModal'
 import CompatibilityAlert from './CompatibilityAlert'
 import { connect } from 'react-redux'
 import { Spin } from 'antd'
@@ -47,6 +48,10 @@ class App extends Component {
           header={() => <TopBar />}
         />
         <AddExampleModal
+          intents={intents}
+          entityNames={entityNames}
+        />
+        <ImportModal
           intents={intents}
           entityNames={entityNames}
         />

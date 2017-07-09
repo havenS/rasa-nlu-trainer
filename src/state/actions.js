@@ -91,3 +91,36 @@ export const SAVE_AND_CLOSE_ADD_MODAL = 'SAVE_AND_CLOSE_ADD_MODAL'
 export const saveAndCloseAddModal = (): Object => ({
   type: SAVE_AND_CLOSE_ADD_MODAL,
 })
+
+export const OPEN_IMPORT_MODAL = 'OPEN_IMPORT_MODAL'
+export const openImportModal = (): Object => ({
+  type: OPEN_IMPORT_MODAL,
+})
+export const CLOSE_IMPORT_MODAL = 'CLOSE_IMPORT_MODAL'
+export const closeImportModal = (): Object => ({
+  type: CLOSE_IMPORT_MODAL,
+})
+export const SAVE_AND_CLOSE_IMPORT_MODAL = 'SAVE_AND_CLOSE_IMPORT_MODAL'
+export const saveAndCloseImportModal = (): Object => ({
+  type: SAVE_AND_CLOSE_IMPORT_MODAL,
+})
+export const fetchPendingStrings = () => async (dispatch: Function): Promise<void> => {
+  const response: Object = await fetch(`${ROOT_PATH}get-pending`, {
+    method: 'GET',
+  })
+  try {
+    const json = await response.json()
+    dispatch(pendingStringsFetch(json.data))
+  } catch(e){}
+}
+export const FETCH_PENDING_STRING = 'FETCH_PENDING_STRING'
+export const pendingStringsFetch = (strings: Object): Object => ({
+  type: FETCH_PENDING_STRING,
+  payload: { strings }
+})
+
+export const ADD_PENDING_STRING = 'ADD_PENDING_STRING'
+export const addPendingString = (id: string): Object => ({
+  type: ADD_PENDING_STRING,
+  payload: { id }
+})

@@ -26,6 +26,9 @@ const mapActions = dispatch => ({
   fetchData: (path, data) => {
     dispatch(actions.fetchData(path, data))
   },
+  openImportModal: () => {
+    dispatch(actions.openImportModal())
+  },
 })
 
 const styles = {
@@ -50,8 +53,9 @@ class TopBar extends Component {
     data.rasa_nlu_data.common_examples = data.rasa_nlu_data.common_examples || []
     this.props.fetchData(file.name, data)
   }
+
   render() {
-    const { filename, isUnsaved, save, openAddModal } = this.props
+    const { filename, isUnsaved, save, openAddModal, openImportModal } = this.props
 
     const fileButtons = isOnline
       ? (
@@ -102,6 +106,13 @@ class TopBar extends Component {
           onClick={() => openAddModal()}
         >
           Add new example
+        </Button>
+        <Button
+          style={ styles.button }
+          type='primary'
+          onClick={() => openImportModal()}
+        >
+          Import pendings
         </Button>
         {fileButtons}
         <ClearButton style={ styles.button }/>

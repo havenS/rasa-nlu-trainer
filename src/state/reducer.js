@@ -15,6 +15,11 @@ import {
   OPEN_ADD_MODAL,
   CLOSE_ADD_MODAL,
   SAVE_AND_CLOSE_ADD_MODAL,
+  OPEN_IMPORT_MODAL,
+  CLOSE_IMPORT_MODAL,
+  SAVE_AND_CLOSE_IMPORT_MODAL,
+  FETCH_PENDING_STRING,
+  ADD_PENDING_STRING,
   RESET,
 } from './actions'
 
@@ -44,6 +49,9 @@ const INITIAL_STATE = {
   isUnsaved: false,
   selection: null,
   idExampleInModal: null,
+  importModalOpen: false,
+  pendingStrings: {},
+  stringsToImport: [],
 }
 
 export default function reducer (
@@ -143,6 +151,45 @@ export default function reducer (
     }
     case SAVE_AND_CLOSE_ADD_MODAL: {
       return immutable.set(state, `idExampleInModal`, null)
+    }
+
+    case OPEN_IMPORT_MODAL: {
+      return immutable.set(state, `importModalOpen`, true)
+    }
+    case CLOSE_IMPORT_MODAL: {
+      return immutable.set(state, `importModalOpen`, null)
+    }
+    case SAVE_AND_CLOSE_IMPORT_MODAL: {
+      for(let key of state.stringsToImport) {
+        let example = createExample({
+          text: state.pendingStrings[key]
+        })
+        state = immutable.push(
+          state,
+          `examples`,
+          example,
+        )
+        state = immutable.del(
+          state,
+          `pendingStrings.${key}`,
+        )
+      }
+      state = immutable.set(state, `stringsToImport`, [])
+      return immutable.set(state, `importModalOpen`, null)
+    }
+
+    case FETCH_PENDING_STRING: {
+      const { strings } = payload
+      return immutable.set(state, `pendingStrings`, strings)
+    }
+
+    case ADD_PENDING_STRING: {
+      const { id } = payload
+      return immutable.push(
+        state,
+        `stringsToImport`,
+        id,
+      )
     }
     default:
       return state

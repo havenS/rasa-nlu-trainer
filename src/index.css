@@ -87,6 +87,9 @@ body {
     background: #2F3057;
     color: #fff;
 }
+.ant-modal-title {
+    color: #fff;
+}
 
 /* Modal */
 .ant-modal-close {
@@ -101,6 +104,21 @@ body {
 
 .anticon-delete:hover{
   color:#00C4ED;
+}
+
+.import-link {
+    font-size: 16px;
+    color: inherit;
+    display: block;
+}
+.import-link-img {
+    float: right;
+}
+.no-import {
+    text-align: center;
+}
+.no-import-text {
+    font-size: 18px;
 }
 
 /* Fixed header */
